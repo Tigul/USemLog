@@ -130,6 +130,7 @@ void ASLSymbolicLogger::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASLSymbolicLogger::Init(const FSLSymbolicLoggerParams& InLoggerParameters,
 	const FSLLoggerLocationParams& InLocationParameters)
 {
+	UE_LOG(LogTemp, Warning, TEXT("TEst init implementation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"));
 	if (bUseIndependently)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s::%d Symbolic logger (%s) is set to work independetly, external calls will have no effect.."),
@@ -169,6 +170,7 @@ void ASLSymbolicLogger::Finish(bool bForced)
 // Init logger (called when the logger is used independently)
 void ASLSymbolicLogger::InitImpl()
 {
+	
 	if (bIsInit)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s::%d Symbolic logger (%s) is already initialized.."), *FString(__FUNCTION__), __LINE__, *GetName());
@@ -196,6 +198,12 @@ void ASLSymbolicLogger::InitImpl()
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s::%d Viz manager (%s) could not load the individual manager (%s).."),
 			*FString(__FUNCTION__), __LINE__, *GetName(), *IndividualManager->GetName());
+		return;
+	}
+
+	if (!SetKnowrobManager()) {
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Viz manager (%s) could not set the Knowrob manager.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
 		return;
 	}
 
@@ -336,6 +344,7 @@ void ASLSymbolicLogger::StartImpl()
 // Finish logger (called when the logger is used independently) (bForced is true if called from destructor)
 void ASLSymbolicLogger::FinishImpl(bool bForced)
 {
+	UE_LOG(LogTemp, Error, TEXT("------------------------------------------"));
 	if (bIsFinished)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s::%d Symbolic logger (%s) is already finished.."),
@@ -424,6 +433,10 @@ void ASLSymbolicLogger::FinishImpl(bool bForced)
 
 	// Write events to file
 	WriteToFile();
+	UE_LOG(LogTemp, Warning, TEXT("%d"), FinishedEvents.Num());
+	UE_LOG(LogTemp, Error, TEXT("####################################"));
+
+	WriteToKnowrob();
 
 #if SL_WITH_ROSBRIDGE
 	// Finish ROS Connection
@@ -519,6 +532,20 @@ void ASLSymbolicLogger::WriteToFile()
 	//}
 }
 
+void ASLSymbolicLogger::WriteToKnowrob() {
+	if (!KnowrobManager) {
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Knowrob Manager not set."),
+			*FString(__func__), __LINE__);
+		return;
+	}
+	// Start the episode 
+	KnowrobManager->SendRestQuery(TEXT("mem_episode_start()"));
+
+	for (TSharedPtr<ISLEvent> Event : FinishedEvents) {
+		KnowrobManager->SendRestQuery("");
+	}
+}
+
 // Create events doc template
 TSharedPtr<FSLOwlExperiment> ASLSymbolicLogger::CreateEventsDocTemplate(ESLOwlExperimentTemplate TemplateType, const FString& InDocId)
 {
@@ -537,6 +564,20 @@ TSharedPtr<FSLOwlExperiment> ASLSymbolicLogger::CreateEventsDocTemplate(ESLOwlEx
 	//}
 	//return MakeShareable(new FSLOwlExperiment());
 }
+
+bool ASLSymbolicLogger::SetKnowrobManager() {
+	if (KnowrobManager && KnowrobManager->IsValidLowLevel()) {
+		return true;
+	}
+	for (TActorIterator<ASLKnowrobManager>Iter(GetWorld()); Iter; ++Iter) {
+		if ((*Iter)->IsValidLowLevel()) {
+			KnowrobManager = *Iter;
+			return true;
+		}
+	}
+	return false;
+}
+
 
 // Get the reference or spawn a new individual manager
 bool ASLSymbolicLogger::SetIndividualManager()

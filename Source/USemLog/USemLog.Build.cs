@@ -77,6 +77,9 @@ public class USemLog : ModuleRules
 				//"MongoCxx",			    // SL_WITH_LIBMONGO_CXX				
 				//"Boost",				    // SL_WITH_BOOST			
 				// ... add private dependencies that you statically link with here ...
+				"HTTP",
+				"Json",
+				"JsonUtilities",
 			}
 			);
 

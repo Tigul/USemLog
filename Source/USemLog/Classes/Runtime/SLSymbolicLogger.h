@@ -8,8 +8,10 @@
 #include "Runtime/SLLoggerStructs.h"
 #include "Events/ISLEventHandler.h"
 #include "ROSProlog/SLPrologClient.h"
+#include "Knowrob/SLKnowrobManager.h"
 #include "Owl/SLOwlExperiment.h"
 #include "SLSymbolicLogger.generated.h"
+
 
 // Forward declarations
 class ASLIndividualManager;
@@ -83,6 +85,9 @@ protected:
 	// Write data to file
 	void WriteToFile();
 
+	// Write data to Knowrob for NEEM genetation
+	void WriteToKnowrob();
+
 	// Create events doc template
 	TSharedPtr<FSLOwlExperiment> CreateEventsDocTemplate(
 		ESLOwlExperimentTemplate TemplateType, const FString& InDocId);
@@ -90,6 +95,9 @@ protected:
 private:
 	// Get the reference or spawn a new initialized individual manager
 	bool SetIndividualManager();
+
+	//Knowrob manager for NEEM recording
+	bool SetKnowrobManager();
 
 	// Helper function which checks if the individual data is loaded
 	bool IsValidAndLoaded(AActor* Actor);
@@ -117,6 +125,8 @@ private:
 
 	// Publish data through ROS
 	void InitROSPublisher();
+
+	
 
 protected:
 	// True when ready to log
@@ -173,6 +183,8 @@ private:
 
 	// Cache of the pick and place Monitors
 	TArray<class USLPickAndPlaceMonitor*> PickAndPlaceMonitors;
+
+	ASLKnowrobManager* KnowrobManager;
 
 	//// Cache of the container manipulation Monitors
 	//TArray<class USLContainerMonitor*> ContainerMonitors;

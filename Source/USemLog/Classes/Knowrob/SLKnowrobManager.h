@@ -7,6 +7,7 @@
 #include "GameFramework/Info.h"
 #include "Knowrob/SLLevelManager.h"
 #include "Knowrob/SLKRWSClient.h"
+#include "Knowrob/SLKRRestClient.h"
 #include "Knowrob/SLKRMsgDispatcher.h"
 #include "Viz/SLVizStructs.h"
 #include "VizQ/SLVizQBase.h"
@@ -83,6 +84,9 @@ public:
 	// Spawn or get manager from the world
 	static ASLKnowrobManager* GetExistingOrSpawnNew(UWorld* World);
 
+	// Sends the given Query to the REST client 
+	bool SendRestQuery(FString Query);
+
 protected:
 	// Setup user input bindings
 	void SetupInputBindings();
@@ -130,6 +134,8 @@ private:
 
 	// Execute the selected query (return false if index is not valid)
 	bool ExecuteQuery(int32 Index);
+
+	
 
 protected:
 	// Skip auto init and start
@@ -187,6 +193,9 @@ private:
 	// Websocket connection to knowrob
 	TSharedPtr<FSLKRWSClient> KRWSClient;
 
+	// Client that is used for REST api calls to knowrob
+	TSharedPtr<FSLKRRestClient> KRRestClient;
+
 	// KR reconnect timer handle
 	FTimerHandle KRConnectRetryTimerHandle;
 
@@ -224,6 +233,9 @@ private:
 	// Subsymbolic data logger
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Semantic Logger")
 	ASLWorldStateLogger* WorldStateLogger;
+
+	UPROPERTY(EditAnywhere, Category = "Semantic Logger")
+	FString NeemInterfacePath = TEXT("");
 
 	/****************************************************************/
 	/*							VizQ								*/

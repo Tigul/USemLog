@@ -199,10 +199,21 @@ void ASLKnowrobManager::Init()
 	}
 
 	// Initialize KR connection client
-	if (!KRWSClient.IsValid())
-	{
-		KRWSClient = MakeShareable<FSLKRWSClient>(new FSLKRWSClient());
-		KRWSClient->Init(KRServerIP, KRServerPort, KRWSProtocol);
+	if (KRWSProtocol == "kr_websocket") {
+
+		if (!KRWSClient.IsValid())
+		{
+			KRWSClient = MakeShareable<FSLKRWSClient>(new FSLKRWSClient());
+			KRWSClient->Init(KRServerIP, KRServerPort, KRWSProtocol);
+		}
+	}
+	else {
+		KRRestClient = MakeShareable<FSLKRRestClient>(new FSLKRRestClient());
+		KRRestClient->Init(KRServerIP, KRServerPort, KRWSProtocol);
+
+		// Load neem-interface to knowrob
+		KRRestClient->SendRequest(*FString::Printf(TEXT("ensure_loaded('%s')"), *NeemInterfacePath));
+
 	}
 
 	// Get and connect the mongo query manager
@@ -719,4 +730,12 @@ bool ASLKnowrobManager::ExecuteQuery(int32 Index)
 		}
 	}
 	return false;
+}
+
+bool ASLKnowrobManager::SendRestQuery(FString Query) {
+	if (!KRRestClient) {
+		return false;
+	}
+	KRRestClient->SendRequest(Query);
+	return true;
 }
